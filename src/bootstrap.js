@@ -244,6 +244,7 @@ async function importSeedData() {
     author: ['find', 'findOne'],
     global: ['find', 'findOne'],
     about: ['find', 'findOne'],
+    candidate: ['find', 'findOne'],
   });
 
   // Create all entries
@@ -269,6 +270,277 @@ async function main() {
 }
 
 
+const CANDIDATE_WEBHOOK_NAME = 'Revalidate candidates';
+const CANDIDATE_WEBHOOK_URL = 'https://www.waltonyr.com/api/revalidate-articles';
+const CANDIDATE_WEBHOOK_EVENTS = [
+  'entry.publish',
+  'entry.unpublish',
+  'entry.update',
+  'entry.delete',
+];
+
+async function ensurePublicAction(roleId, action) {
+  const existing = await strapi.query('plugin::users-permissions.permission').findOne({
+    where: {
+      action,
+      role: roleId,
+    },
+  });
+
+  if (existing) {
+    return;
+  }
+
+  await strapi.query('plugin::users-permissions.permission').create({
+    data: {
+      action,
+      role: roleId,
+    },
+  });
+}
+
+async function ensureCandidatePublicPermissions() {
+  const publicRole = await strapi.query('plugin::users-permissions.role').findOne({
+    where: {
+      type: 'public',
+    },
+  });
+
+  if (!publicRole) {
+    return;
+  }
+
+  await ensurePublicAction(publicRole.id, 'api::candidate.candidate.find');
+  await ensurePublicAction(publicRole.id, 'api::candidate.candidate.findOne');
+  await ensurePublicAction(publicRole.id, 'plugin::upload.content-api.find');
+  await ensurePublicAction(publicRole.id, 'plugin::upload.content-api.findOne');
+}
+
+async function ensureCandidateAdminLabels() {
+  const contentType = strapi.contentTypes['api::candidate.candidate'];
+  if (!contentType) {
+    return;
+  }
+
+  const contentTypes = strapi.plugin('content-manager').service('content-types');
+  const current = await contentTypes.findConfiguration(contentType);
+  if (!current?.metadatas) {
+    return;
+  }
+
+  const labelUpdates = {
+    office: {
+      label: 'Office / Race',
+      description: 'e.g. "Walton County Commission District 1"',
+    },
+    contactUrl: {
+      label: 'Contact URL',
+      description: 'External campaign contact page; must be an absolute URL',
+    },
+  };
+
+  const metadatas = { ...current.metadatas };
+  let changed = false;
+
+  for (const [field, meta] of Object.entries(labelUpdates)) {
+    if (!metadatas[field]) {
+      continue;
+    }
+
+    const nextEdit = {
+      ...metadatas[field].edit,
+      label: meta.label,
+      description: meta.description,
+    };
+    const nextList = {
+      ...metadatas[field].list,
+      label: meta.label,
+    };
+
+    if (
+      metadatas[field].edit?.label === nextEdit.label &&
+      metadatas[field].edit?.description === nextEdit.description &&
+      metadatas[field].list?.label === nextList.label
+    ) {
+      continue;
+    }
+
+    metadatas[field] = {
+      ...metadatas[field],
+      edit: nextEdit,
+      list: nextList,
+    };
+    changed = true;
+  }
+
+  if (!changed) {
+    return;
+  }
+
+  await contentTypes.updateConfiguration(contentType, {
+    settings: current.settings,
+    metadatas,
+    layouts: current.layouts,
+  });
+}
+
+function installCandidateWebhookSignature(strapiInstance) {
+  const crypto = require('crypto');
+  const runner = strapiInstance.get('webhookRunner');
+  if (!runner || runner.__candidateWebhookPatched) {
+    return;
+  }
+
+  const originalRun = runner.run.bind(runner);
+
+  runner.run = function runCandidateWebhook(webhook, event, info = {}) {
+    if (webhook.url !== CANDIDATE_WEBHOOK_URL) {
+      return originalRun(webhook, event, info);
+    }
+
+    if (info.model && info.model !== 'candidate') {
+      return Promise.resolve({ statusCode: 204 });
+    }
+
+    const body = JSON.stringify({
+      event,
+      createdAt: new Date(),
+      ...info,
+    });
+    const headers = {
+      ...this.config.defaultHeaders,
+      ...webhook.headers,
+      'X-Strapi-Event': event,
+      'Content-Type': 'application/json',
+    };
+    const secret = process.env.WEBHOOK_SECRET;
+
+    if (secret) {
+      headers['x-webhook-signature'] = crypto
+        .createHmac('sha256', secret)
+        .update(body)
+        .digest('hex');
+    } else {
+      strapiInstance.log.warn(
+        'WEBHOOK_SECRET is not set; candidate webhook will be sent without x-webhook-signature'
+      );
+    }
+
+    return this.fetch(webhook.url, {
+      method: 'post',
+      body,
+      headers,
+      signal: AbortSignal.timeout(10000),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          return { statusCode: res.status };
+        }
+        return {
+          statusCode: res.status,
+          message: await res.text(),
+        };
+      })
+      .catch((err) => ({
+        statusCode: 500,
+        message: err.message,
+      }));
+  };
+
+  runner.__candidateWebhookPatched = true;
+}
+
+async function ensureCandidateWebhook() {
+  const webhookStore = strapi.get('webhookStore');
+  const webhookRunner = strapi.get('webhookRunner');
+  if (!webhookStore || !webhookRunner) {
+    return;
+  }
+
+  installCandidateWebhookSignature(strapi);
+
+  const webhooks = await webhookStore.findWebhooks();
+  const existing = webhooks.find(
+    (webhook) => webhook.name === CANDIDATE_WEBHOOK_NAME || webhook.url === CANDIDATE_WEBHOOK_URL
+  );
+
+  const payload = {
+    name: CANDIDATE_WEBHOOK_NAME,
+    url: CANDIDATE_WEBHOOK_URL,
+    headers: {},
+    events: CANDIDATE_WEBHOOK_EVENTS,
+    isEnabled: true,
+  };
+
+  if (existing) {
+    const updated = await webhookStore.updateWebhook(existing.id, {
+      ...existing,
+      ...payload,
+    });
+    webhookRunner.update(updated);
+    return;
+  }
+
+  const created = await webhookStore.createWebhook(payload);
+  webhookRunner.add(created);
+}
+
+async function ensureSampleCandidate() {
+  const existing = await strapi.documents('api::candidate.candidate').findFirst({
+    filters: { slug: { $eq: 'jane-doe' } },
+    status: 'published',
+  });
+
+  if (existing) {
+    return;
+  }
+
+  const photo = await checkFileExistsBeforeUpload(['jane-doe.png']);
+
+  await strapi.documents('api::candidate.candidate').create({
+    data: {
+      name: 'Jane Doe',
+      slug: 'jane-doe',
+      office: 'Walton County Commission',
+      photo,
+      bio: [
+        {
+          type: 'paragraph',
+          children: [
+            {
+              type: 'text',
+              text: 'Jane Doe is a candidate for Walton County Commission. She is focused on local infrastructure, public safety, and accountable county government.',
+            },
+          ],
+        },
+      ],
+      talkingPoints: [
+        { point: 'Invest in roads, drainage, and local infrastructure' },
+        { point: 'Support public safety and first responders' },
+        { point: 'Keep county spending transparent and accountable' },
+      ],
+      contactUrl: 'https://example.com/contact',
+      sortOrder: 1,
+      metaTitle: 'Jane Doe',
+      metaDescription: 'Jane Doe for Walton County Commission.',
+    },
+    status: 'published',
+  });
+}
+
+async function ensureCandidateFeature() {
+  try {
+    await ensureCandidatePublicPermissions();
+    await ensureCandidateAdminLabels();
+    await ensureCandidateWebhook();
+    await ensureSampleCandidate();
+  } catch (error) {
+    strapi.log.error('Could not finish Candidate collection setup');
+    strapi.log.error(error);
+  }
+}
+
 module.exports = async () => {
   await seedExampleApp();
+  await ensureCandidateFeature();
 };

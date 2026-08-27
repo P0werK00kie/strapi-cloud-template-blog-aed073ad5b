@@ -1,0 +1,63 @@
+{
+  "kind": "collectionType",
+  "collectionName": "candidates",
+  "info": {
+    "singularName": "candidate",
+    "pluralName": "candidates",
+    "displayName": "Candidate",
+    "description": "WCYR website candidates for /2026candidates"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "office": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "photo": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "bio": {
+      "type": "blocks",
+      "required": true
+    },
+    "talkingPoints": {
+      "type": "component",
+      "repeatable": true,
+      "component": "candidates.talking-point"
+    },
+    "contactUrl": {
+      "type": "string",
+      "maxLength": 500,
+      "regex": "^https?://.+"
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "metaTitle": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "metaDescription": {
+      "type": "string",
+      "maxLength": 160
+    }
+  }
+}
