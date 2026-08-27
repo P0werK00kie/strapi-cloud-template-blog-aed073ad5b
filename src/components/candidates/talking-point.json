@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_candidates_talking_points",
+  "info": {
+    "displayName": "Talking Point",
+    "description": "Short campaign talking point shown on candidate pages",
+    "icon": "bulletList"
+  },
+  "options": {},
+  "attributes": {
+    "point": {
+      "type": "string",
+      "required": true,
+      "maxLength": 280
+    }
+  }
+}
