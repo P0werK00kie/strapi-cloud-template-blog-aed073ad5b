@@ -331,11 +331,27 @@ async function ensureCandidateAdminLabels() {
   const labelUpdates = {
     office: {
       label: 'Office / Race',
-      description: 'e.g. "Walton County Commission District 1"',
+      description: 'e.g. "Georgia House of Representatives District 112"',
+    },
+    category: {
+      label: 'Category',
+      description: 'Federal, State, or Local race',
+    },
+    photo: {
+      label: 'Photo',
+      description: 'Primary headshot / featured photo',
+    },
+    photos: {
+      label: 'Photos',
+      description: 'Campaign gallery / collage photos',
     },
     contactUrl: {
       label: 'Contact URL',
-      description: 'External campaign contact page; must be an absolute URL',
+      description: 'Website link to the campaign or donation page; must be an absolute URL',
+    },
+    metaImage: {
+      label: 'Meta Image',
+      description: 'Optional SEO / social share image',
     },
   };
 
@@ -492,6 +508,13 @@ async function ensureSampleCandidate() {
   });
 
   if (existing) {
+    if (!existing.category) {
+      await strapi.documents('api::candidate.candidate').update({
+        documentId: existing.documentId,
+        data: { category: 'Local' },
+        status: 'published',
+      });
+    }
     return;
   }
 
@@ -502,6 +525,7 @@ async function ensureSampleCandidate() {
       name: 'Jane Doe',
       slug: 'jane-doe',
       office: 'Walton County Commission',
+      category: 'Local',
       photo,
       bio: [
         {

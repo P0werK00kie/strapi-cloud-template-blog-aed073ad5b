@@ -566,7 +566,9 @@ export interface ApiCandidateCandidate extends Struct.CollectionTypeSchema {
     draftAndPublish: true;
   };
   attributes: {
-    bio: Schema.Attribute.Blocks & Schema.Attribute.Required;
+    bio: Schema.Attribute.Blocks;
+    category: Schema.Attribute.Enumeration<['Federal', 'State', 'Local']> &
+      Schema.Attribute.DefaultTo<'State'>;
     contactUrl: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 500;
@@ -580,10 +582,11 @@ export interface ApiCandidateCandidate extends Struct.CollectionTypeSchema {
       'api::candidate.candidate'
     > &
       Schema.Attribute.Private;
-    metaDescription: Schema.Attribute.String &
+    metaDescription: Schema.Attribute.Text &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 160;
       }>;
+    metaImage: Schema.Attribute.Media<'images'>;
     metaTitle: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{
         maxLength: 60;
@@ -596,9 +599,10 @@ export interface ApiCandidateCandidate extends Struct.CollectionTypeSchema {
       }>;
     office: Schema.Attribute.String &
       Schema.Attribute.SetMinMaxLength<{
-        maxLength: 160;
+        maxLength: 200;
       }>;
-    photo: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+    photo: Schema.Attribute.Media<'images'>;
+    photos: Schema.Attribute.Media<'images', true>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     sortOrder: Schema.Attribute.Integer & Schema.Attribute.DefaultTo<0>;
