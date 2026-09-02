@@ -3,8 +3,8 @@
 /**
  * candidate controller
  *
- * Always populate media and talkingPoints so published REST responses
- * match what the Next.js site expects.
+ * Always populate media, issues, and legacy talkingPoints so published
+ * REST responses match what the Next.js site expects.
  */
 
 const { createCoreController } = require('@strapi/strapi').factories;
@@ -12,6 +12,7 @@ const { createCoreController } = require('@strapi/strapi').factories;
 const defaultPopulate = {
   photo: true,
   photos: true,
+  issues: true,
   talkingPoints: true,
   metaImage: true,
 };

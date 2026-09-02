@@ -349,6 +349,14 @@ async function ensureCandidateAdminLabels() {
       label: 'Contact URL',
       description: 'Website link to the campaign or donation page; must be an absolute URL',
     },
+    issues: {
+      label: 'Issues',
+      description: 'Campaign issues. Add a stance to make the item expandable on /2026candidates/[slug].',
+    },
+    talkingPoints: {
+      label: 'Talking Points (deprecated)',
+      description: 'Deprecated — use Issues. Kept so the Next.js site can fall back during migration.',
+    },
     metaImage: {
       label: 'Meta Image',
       description: 'Optional SEO / social share image',
@@ -501,17 +509,92 @@ async function ensureCandidateWebhook() {
   webhookRunner.add(created);
 }
 
+function blocksParagraph(text) {
+  return [
+    {
+      type: 'paragraph',
+      children: [{ type: 'text', text }],
+    },
+  ];
+}
+
+const EXAMPLE_CANDIDATE_ISSUES = [
+  {
+    title: 'Public Safety',
+    stance: blocksParagraph(
+      'I will support increased funding for local law enforcement and first responders.'
+    ),
+  },
+  {
+    title: 'Tax Relief',
+    stance: blocksParagraph(
+      'Georgia families deserve lower taxes. I will work to reduce the state income tax.'
+    ),
+  },
+  {
+    title: 'Infrastructure',
+  },
+];
+
+function talkingPointsToIssues(talkingPoints = []) {
+  return talkingPoints
+    .map((item) => (typeof item?.point === 'string' ? item.point.trim() : ''))
+    .filter(Boolean)
+    .map((title) => ({ title }));
+}
+
+async function migrateTalkingPointsToIssues() {
+  for (const status of ['published', 'draft']) {
+    const candidates = await strapi.documents('api::candidate.candidate').findMany({
+      status,
+      limit: 100,
+      populate: {
+        talkingPoints: true,
+        issues: true,
+      },
+    });
+
+    for (const candidate of candidates) {
+      const issues = candidate.issues || [];
+      if (issues.length > 0) {
+        continue;
+      }
+
+      const migrated = talkingPointsToIssues(candidate.talkingPoints);
+      if (migrated.length === 0) {
+        continue;
+      }
+
+      await strapi.documents('api::candidate.candidate').update({
+        documentId: candidate.documentId,
+        data: { issues: migrated },
+        status,
+      });
+    }
+  }
+}
+
 async function ensureSampleCandidate() {
   const existing = await strapi.documents('api::candidate.candidate').findFirst({
     filters: { slug: { $eq: 'jane-doe' } },
     status: 'published',
+    populate: {
+      issues: true,
+    },
   });
 
   if (existing) {
+    const data = {};
     if (!existing.category) {
+      data.category = 'Local';
+    }
+    if (!existing.issues?.length) {
+      data.issues = EXAMPLE_CANDIDATE_ISSUES;
+    }
+    if (Object.keys(data).length > 0) {
       await strapi.documents('api::candidate.candidate').update({
         documentId: existing.documentId,
-        data: { category: 'Local' },
+        data,
         status: 'published',
       });
     }
@@ -538,6 +621,7 @@ async function ensureSampleCandidate() {
           ],
         },
       ],
+      issues: EXAMPLE_CANDIDATE_ISSUES,
       talkingPoints: [
         { point: 'Invest in roads, drainage, and local infrastructure' },
         { point: 'Support public safety and first responders' },
@@ -558,6 +642,7 @@ async function ensureCandidateFeature() {
     await ensureCandidateAdminLabels();
     await ensureCandidateWebhook();
     await ensureSampleCandidate();
+    await migrateTalkingPointsToIssues();
   } catch (error) {
     strapi.log.error('Could not finish Candidate collection setup');
     strapi.log.error(error);
