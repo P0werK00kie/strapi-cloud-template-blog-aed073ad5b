@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_candidate_issues",
+  "info": {
+    "displayName": "Issue",
+    "description": "A campaign issue with expandable stance details"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "stance": {
+      "type": "blocks",
+      "required": false
+    }
+  }
+}

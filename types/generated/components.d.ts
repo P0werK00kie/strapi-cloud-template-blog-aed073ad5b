@@ -1,5 +1,17 @@
 import type { Schema, Struct } from '@strapi/strapi';
 
+export interface CandidateIssue extends Struct.ComponentSchema {
+  collectionName: 'components_candidate_issues';
+  info: {
+    description: 'A campaign issue with expandable stance details';
+    displayName: 'Issue';
+  };
+  attributes: {
+    stance: Schema.Attribute.Blocks;
+    title: Schema.Attribute.String & Schema.Attribute.Required;
+  };
+}
+
 export interface CandidatesTalkingPoint extends Struct.ComponentSchema {
   collectionName: 'components_candidates_talking_points';
   info: {
@@ -81,6 +93,7 @@ export interface SharedSlider extends Struct.ComponentSchema {
 declare module '@strapi/strapi' {
   export module Public {
     export interface ComponentSchemas {
+      'candidate.issue': CandidateIssue;
       'candidates.talking-point': CandidatesTalkingPoint;
       'shared.media': SharedMedia;
       'shared.quote': SharedQuote;
