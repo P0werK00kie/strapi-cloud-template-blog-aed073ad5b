@@ -58,6 +58,11 @@
       "repeatable": true,
       "component": "candidates.talking-point"
     },
+    "hasBioPage": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
     "contactUrl": {
       "type": "string",
       "maxLength": 500,

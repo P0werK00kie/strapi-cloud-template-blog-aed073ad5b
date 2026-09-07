@@ -345,10 +345,6 @@ async function ensureCandidateAdminLabels() {
       label: 'Photos',
       description: 'Campaign gallery / collage photos',
     },
-    contactUrl: {
-      label: 'Contact URL',
-      description: 'Website link to the campaign or donation page; must be an absolute URL',
-    },
     issues: {
       label: 'Issues',
       description: 'Campaign issues. Add a stance to make the item expandable on /2026candidates/[slug].',
@@ -356,6 +352,21 @@ async function ensureCandidateAdminLabels() {
     talkingPoints: {
       label: 'Talking Points (deprecated)',
       description: 'Deprecated — use Issues. Kept so the Next.js site can fall back during migration.',
+    },
+    hasBioPage: {
+      label: 'Has Bio Page',
+      description:
+        "If enabled, Learn More opens the WCYR bio page. If disabled, Learn More opens the candidate's Contact URL (campaign website) instead. When enabled, fill in Bio (and optional Issues and Photos). When disabled, Contact URL is required and bio content is optional.",
+    },
+    contactUrl: {
+      label: 'Contact URL',
+      description:
+        'Campaign or donation website (absolute URL). Required when Has Bio Page is disabled — Learn More opens this URL in a new tab.',
+    },
+    bio: {
+      label: 'Bio',
+      description:
+        'On-site biography. Fill this in when Has Bio Page is enabled. If Has Bio Page is disabled, bio is optional and will not be linked from the listing page.',
     },
     metaImage: {
       label: 'Meta Image',
@@ -397,6 +408,11 @@ async function ensureCandidateAdminLabels() {
     changed = true;
   }
 
+  const { layouts, changed: layoutChanged } = placeHasBioPageNearContactUrl(current.layouts);
+  if (layoutChanged) {
+    changed = true;
+  }
+
   if (!changed) {
     return;
   }
@@ -404,8 +420,62 @@ async function ensureCandidateAdminLabels() {
   await contentTypes.updateConfiguration(contentType, {
     settings: current.settings,
     metadatas,
-    layouts: current.layouts,
+    layouts,
   });
+}
+
+function placeHasBioPageNearContactUrl(layouts = {}) {
+  const edit = Array.isArray(layouts.edit) ? layouts.edit : [];
+  const flattened = edit.flat().filter((el) => el && el.name);
+  const names = flattened.map((el) => el.name);
+  const hasBioIdx = names.indexOf('hasBioPage');
+  const contactIdx = names.indexOf('contactUrl');
+
+  const alreadyTogether =
+    hasBioIdx >= 0 && contactIdx >= 0 && Math.abs(hasBioIdx - contactIdx) === 1;
+
+  if (alreadyTogether && flattened[Math.min(hasBioIdx, contactIdx)].name === 'hasBioPage') {
+    return { layouts, changed: false };
+  }
+
+  const rest = flattened.filter((el) => el.name !== 'hasBioPage' && el.name !== 'contactUrl');
+  const pair = [
+    { name: 'hasBioPage', size: 4 },
+    { name: 'contactUrl', size: 8 },
+  ];
+
+  let insertAt = rest.findIndex((el) => el.name === 'sortOrder');
+  if (insertAt < 0) {
+    insertAt = rest.length;
+  }
+
+  const nextFlat = [...rest.slice(0, insertAt), ...pair, ...rest.slice(insertAt)];
+  const rows = [];
+  let row = [];
+  let used = 0;
+
+  for (const el of nextFlat) {
+    const size = el.size || 6;
+    if (used + size > 12 && row.length > 0) {
+      rows.push(row);
+      row = [];
+      used = 0;
+    }
+    row.push({ name: el.name, size });
+    used += size;
+  }
+
+  if (row.length > 0) {
+    rows.push(row);
+  }
+
+  return {
+    layouts: {
+      ...layouts,
+      edit: rows,
+    },
+    changed: true,
+  };
 }
 
 function installCandidateWebhookSignature(strapiInstance) {
@@ -627,6 +697,7 @@ async function ensureSampleCandidate() {
         { point: 'Support public safety and first responders' },
         { point: 'Keep county spending transparent and accountable' },
       ],
+      hasBioPage: true,
       contactUrl: 'https://example.com/contact',
       sortOrder: 1,
       metaTitle: 'Jane Doe',
@@ -636,11 +707,21 @@ async function ensureSampleCandidate() {
   });
 }
 
+async function ensureHasBioPageDefaults() {
+  const knex = strapi.db.connection;
+  if (!(await knex.schema.hasColumn('candidates', 'has_bio_page'))) {
+    return;
+  }
+
+  await knex('candidates').whereNull('has_bio_page').update({ has_bio_page: true });
+}
+
 async function ensureCandidateFeature() {
   try {
     await ensureCandidatePublicPermissions();
     await ensureCandidateAdminLabels();
     await ensureCandidateWebhook();
+    await ensureHasBioPageDefaults();
     await ensureSampleCandidate();
     await migrateTalkingPointsToIssues();
   } catch (error) {
