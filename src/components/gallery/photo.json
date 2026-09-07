@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_gallery_photos",
+  "info": {
+    "displayName": "Photo",
+    "description": "A gallery photo with optional caption"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "caption": {
+      "type": "string",
+      "required": false
+    }
+  }
+}

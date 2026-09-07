@@ -245,6 +245,7 @@ async function importSeedData() {
     global: ['find', 'findOne'],
     about: ['find', 'findOne'],
     candidate: ['find', 'findOne'],
+    'gallery-event': ['find', 'findOne'],
   });
 
   // Create all entries

@@ -28,6 +28,18 @@ export interface CandidatesTalkingPoint extends Struct.ComponentSchema {
   };
 }
 
+export interface GalleryPhoto extends Struct.ComponentSchema {
+  collectionName: 'components_gallery_photos';
+  info: {
+    description: 'A gallery photo with optional caption';
+    displayName: 'Photo';
+  };
+  attributes: {
+    caption: Schema.Attribute.String;
+    image: Schema.Attribute.Media<'images'> & Schema.Attribute.Required;
+  };
+}
+
 export interface SharedMedia extends Struct.ComponentSchema {
   collectionName: 'components_shared_media';
   info: {
@@ -95,6 +107,7 @@ declare module '@strapi/strapi' {
     export interface ComponentSchemas {
       'candidate.issue': CandidateIssue;
       'candidates.talking-point': CandidatesTalkingPoint;
+      'gallery.photo': GalleryPhoto;
       'shared.media': SharedMedia;
       'shared.quote': SharedQuote;
       'shared.rich-text': SharedRichText;

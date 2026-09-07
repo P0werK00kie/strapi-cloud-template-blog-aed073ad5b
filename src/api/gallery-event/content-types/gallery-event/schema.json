@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "gallery_events",
+  "info": {
+    "singularName": "gallery-event",
+    "pluralName": "gallery-events",
+    "displayName": "Gallery Event",
+    "description": "Photo albums grouped by WCYR event"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "eventDate": {
+      "type": "date",
+      "required": false
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "photos": {
+      "type": "component",
+      "repeatable": true,
+      "component": "gallery.photo",
+      "required": true
+    }
+  }
+}
