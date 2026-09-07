@@ -245,6 +245,7 @@ async function importSeedData() {
     global: ['find', 'findOne'],
     about: ['find', 'findOne'],
     candidate: ['find', 'findOne'],
+    'gallery-event': ['find', 'findOne'],
   });
 
   // Create all entries
@@ -270,7 +271,7 @@ async function main() {
 }
 
 
-const CANDIDATE_WEBHOOK_NAME = 'Revalidate candidates';
+const CANDIDATE_WEBHOOK_NAME = 'Revalidate WCYR content';
 const CANDIDATE_WEBHOOK_URL = 'https://www.waltonyr.com/api/revalidate-articles';
 const CANDIDATE_WEBHOOK_EVENTS = [
   'entry.publish',
@@ -278,6 +279,7 @@ const CANDIDATE_WEBHOOK_EVENTS = [
   'entry.update',
   'entry.delete',
 ];
+const REVALIDATE_WEBHOOK_MODELS = new Set(['candidate', 'gallery-event']);
 
 async function ensurePublicAction(roleId, action) {
   const existing = await strapi.query('plugin::users-permissions.permission').findOne({
@@ -312,6 +314,8 @@ async function ensureCandidatePublicPermissions() {
 
   await ensurePublicAction(publicRole.id, 'api::candidate.candidate.find');
   await ensurePublicAction(publicRole.id, 'api::candidate.candidate.findOne');
+  await ensurePublicAction(publicRole.id, 'api::gallery-event.gallery-event.find');
+  await ensurePublicAction(publicRole.id, 'api::gallery-event.gallery-event.findOne');
   await ensurePublicAction(publicRole.id, 'plugin::upload.content-api.find');
   await ensurePublicAction(publicRole.id, 'plugin::upload.content-api.findOne');
 }
@@ -492,7 +496,7 @@ function installCandidateWebhookSignature(strapiInstance) {
       return originalRun(webhook, event, info);
     }
 
-    if (info.model && info.model !== 'candidate') {
+    if (info.model && !REVALIDATE_WEBHOOK_MODELS.has(info.model)) {
       return Promise.resolve({ statusCode: 204 });
     }
 
@@ -716,6 +720,73 @@ async function ensureHasBioPageDefaults() {
   await knex('candidates').whereNull('has_bio_page').update({ has_bio_page: true });
 }
 
+async function ensureSampleGalleryEvent() {
+  const existing = await strapi.documents('api::gallery-event.gallery-event').findFirst({
+    filters: { slug: { $eq: 'monthly-meetup-march-2026' } },
+    status: 'published',
+    populate: {
+      photos: {
+        populate: {
+          image: true,
+        },
+      },
+    },
+  });
+
+  if (existing?.photos?.length) {
+    return;
+  }
+
+  const images = await Promise.all([
+    checkFileExistsBeforeUpload(['gallery-meetup-1.png']),
+    checkFileExistsBeforeUpload(['gallery-meetup-2.png']),
+    checkFileExistsBeforeUpload(['gallery-meetup-3.png']),
+  ]);
+
+  const photos = [
+    {
+      image: images[0],
+      caption: 'Members networking at High Voltage Wings',
+    },
+    {
+      image: images[1],
+      caption: 'Welcome remarks',
+    },
+    {
+      image: images[2],
+    },
+  ];
+
+  if (existing) {
+    await strapi.documents('api::gallery-event.gallery-event').update({
+      documentId: existing.documentId,
+      data: { photos },
+      status: 'published',
+    });
+    return;
+  }
+
+  await strapi.documents('api::gallery-event.gallery-event').create({
+    data: {
+      title: 'Monthly Meetup — March 2026',
+      slug: 'monthly-meetup-march-2026',
+      eventDate: '2026-03-17',
+      sortOrder: 1,
+      photos,
+    },
+    status: 'published',
+  });
+}
+
+async function ensureGalleryEventFeature() {
+  try {
+    await ensureSampleGalleryEvent();
+  } catch (error) {
+    strapi.log.error('Could not finish Gallery Event collection setup');
+    strapi.log.error(error);
+  }
+}
+
 async function ensureCandidateFeature() {
   try {
     await ensureCandidatePublicPermissions();
@@ -733,4 +804,5 @@ async function ensureCandidateFeature() {
 module.exports = async () => {
   await seedExampleApp();
   await ensureCandidateFeature();
+  await ensureGalleryEventFeature();
 };
