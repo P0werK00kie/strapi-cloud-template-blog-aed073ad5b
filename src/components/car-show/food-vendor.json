@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_car_show_food_vendors",
+  "info": {
+    "displayName": "Food vendor",
+    "description": "A food vendor logo on the 2027 car show page",
+    "icon": "restaurant"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "link": {
+      "type": "text",
+      "required": false
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0,
+      "required": false
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "kind": "singleType",
+  "collectionName": "car_show_2027s",
+  "info": {
+    "singularName": "car-show-2027",
+    "pluralName": "car-show-2027s",
+    "displayName": "Car Show 2027",
+    "description": "WCYR 2027 Car Show page. One document, consumed by GET /api/car-show-2027."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "heroBrand": {
+      "type": "string"
+    },
+    "heroYear": {
+      "type": "string",
+      "default": "2027"
+    },
+    "heroTitle": {
+      "type": "string",
+      "default": "Car Show"
+    },
+    "heroTagline": {
+      "type": "string"
+    },
+    "heroDateLabel": {
+      "type": "string"
+    },
+    "heroImage": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "heroImageAlt": {
+      "type": "string"
+    },
+    "photoStripEyebrow": {
+      "type": "string"
+    },
+    "photoStripTitle": {
+      "type": "string"
+    },
+    "carouselPhotos": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.carousel-photo"
+    },
+    "venueEyebrow": {
+      "type": "string"
+    },
+    "venueTitle": {
+      "type": "string"
+    },
+    "venueDateLabel": {
+      "type": "string"
+    },
+    "venueDateNote": {
+      "type": "text"
+    },
+    "locationName": {
+      "type": "string"
+    },
+    "locationLine1": {
+      "type": "string"
+    },
+    "locationLine2": {
+      "type": "string"
+    },
+    "mapUrl": {
+      "type": "text"
+    },
+    "expectTitle": {
+      "type": "string"
+    },
+    "expectItems": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.expect-item"
+    },
+    "registrationEyebrow": {
+      "type": "string"
+    },
+    "registrationTitle": {
+      "type": "string"
+    },
+    "registrationDescription": {
+      "type": "text"
+    },
+    "vehicleRegistration": {
+      "type": "component",
+      "repeatable": false,
+      "component": "car-show.registration-slot"
+    },
+    "vendorRegistration": {
+      "type": "component",
+      "repeatable": false,
+      "component": "car-show.registration-slot"
+    },
+    "sponsorRegistration": {
+      "type": "component",
+      "repeatable": false,
+      "component": "car-show.registration-slot"
+    },
+    "tiersEyebrow": {
+      "type": "string"
+    },
+    "tiersTitle": {
+      "type": "string"
+    },
+    "tiersDescription": {
+      "type": "text"
+    },
+    "sponsorshipTiers": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.sponsorship-tier"
+    },
+    "vendorPackageName": {
+      "type": "string"
+    },
+    "vendorPackageItems": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.vendor-package-item"
+    },
+    "foodVendorsEyebrow": {
+      "type": "string"
+    },
+    "foodVendorsTitle": {
+      "type": "string"
+    },
+    "foodVendorsDescription": {
+      "type": "text"
+    },
+    "foodVendors": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.food-vendor"
+    },
+    "ctaTitle": {
+      "type": "string"
+    },
+    "ctaDescription": {
+      "type": "text"
+    },
+    "contactLabel": {
+      "type": "string"
+    },
+    "contactHref": {
+      "type": "string"
+    },
+    "stickyClosedLabel": {
+      "type": "string"
+    },
+    "stickyLabel": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "collectionName": "components_car_show_registration_slots",
+  "info": {
+    "displayName": "Registration slot",
+    "description": "Vehicle, vendor, or sponsor registration block",
+    "icon": "file"
+  },
+  "options": {},
+  "attributes": {
+    "eyebrow": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "buttonLabel": {
+      "type": "string"
+    },
+    "closedLabel": {
+      "type": "string"
+    },
+    "registrationClosed": {
+      "type": "boolean",
+      "default": true
+    },
+    "formUrl": {
+      "type": "text"
+    },
+    "formId": {
+      "type": "string"
+    },
+    "formTitle": {
+      "type": "string"
+    },
+    "formHeight": {
+      "type": "integer",
+      "default": 1200
+    },
+    "footnote": {
+      "type": "text"
+    },
+    "steps": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.bullet"
+    },
+    "highlights": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.bullet"
+    }
+  }
+}

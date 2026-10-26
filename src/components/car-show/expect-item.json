@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_car_show_expect_items",
+  "info": {
+    "displayName": "Expect item",
+    "description": "One line in the What to expect list",
+    "icon": "check"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

@@ -617,6 +617,91 @@ export interface ApiCandidateCandidate extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiCarShow2027CarShow2027 extends Struct.SingleTypeSchema {
+  collectionName: 'car_show_2027s';
+  info: {
+    description: 'WCYR 2027 Car Show page. One document, consumed by GET /api/car-show-2027.';
+    displayName: 'Car Show 2027';
+    pluralName: 'car-show-2027s';
+    singularName: 'car-show-2027';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    carouselPhotos: Schema.Attribute.Component<'car-show.carousel-photo', true>;
+    contactHref: Schema.Attribute.String;
+    contactLabel: Schema.Attribute.String;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    ctaDescription: Schema.Attribute.Text;
+    ctaTitle: Schema.Attribute.String;
+    expectItems: Schema.Attribute.Component<'car-show.expect-item', true>;
+    expectTitle: Schema.Attribute.String;
+    foodVendors: Schema.Attribute.Component<'car-show.food-vendor', true>;
+    foodVendorsDescription: Schema.Attribute.Text;
+    foodVendorsEyebrow: Schema.Attribute.String;
+    foodVendorsTitle: Schema.Attribute.String;
+    heroBrand: Schema.Attribute.String;
+    heroDateLabel: Schema.Attribute.String;
+    heroImage: Schema.Attribute.Media<'images'>;
+    heroImageAlt: Schema.Attribute.String;
+    heroTagline: Schema.Attribute.String;
+    heroTitle: Schema.Attribute.String & Schema.Attribute.DefaultTo<'Car Show'>;
+    heroYear: Schema.Attribute.String & Schema.Attribute.DefaultTo<'2027'>;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::car-show-2027.car-show-2027'
+    > &
+      Schema.Attribute.Private;
+    locationLine1: Schema.Attribute.String;
+    locationLine2: Schema.Attribute.String;
+    locationName: Schema.Attribute.String;
+    mapUrl: Schema.Attribute.Text;
+    photoStripEyebrow: Schema.Attribute.String;
+    photoStripTitle: Schema.Attribute.String;
+    publishedAt: Schema.Attribute.DateTime;
+    registrationDescription: Schema.Attribute.Text;
+    registrationEyebrow: Schema.Attribute.String;
+    registrationTitle: Schema.Attribute.String;
+    sponsorRegistration: Schema.Attribute.Component<
+      'car-show.registration-slot',
+      false
+    >;
+    sponsorshipTiers: Schema.Attribute.Component<
+      'car-show.sponsorship-tier',
+      true
+    >;
+    stickyClosedLabel: Schema.Attribute.String;
+    stickyLabel: Schema.Attribute.String;
+    tiersDescription: Schema.Attribute.Text;
+    tiersEyebrow: Schema.Attribute.String;
+    tiersTitle: Schema.Attribute.String;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    vehicleRegistration: Schema.Attribute.Component<
+      'car-show.registration-slot',
+      false
+    >;
+    vendorPackageItems: Schema.Attribute.Component<
+      'car-show.vendor-package-item',
+      true
+    >;
+    vendorPackageName: Schema.Attribute.String;
+    vendorRegistration: Schema.Attribute.Component<
+      'car-show.registration-slot',
+      false
+    >;
+    venueDateLabel: Schema.Attribute.String;
+    venueDateNote: Schema.Attribute.Text;
+    venueEyebrow: Schema.Attribute.String;
+    venueTitle: Schema.Attribute.String;
+  };
+}
+
 export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   collectionName: 'categories';
   info: {
@@ -1231,6 +1316,7 @@ declare module '@strapi/strapi' {
       'api::article.article': ApiArticleArticle;
       'api::author.author': ApiAuthorAuthor;
       'api::candidate.candidate': ApiCandidateCandidate;
+      'api::car-show-2027.car-show-2027': ApiCarShow2027CarShow2027;
       'api::category.category': ApiCategoryCategory;
       'api::gallery-event.gallery-event': ApiGalleryEventGalleryEvent;
       'api::global.global': ApiGlobalGlobal;
