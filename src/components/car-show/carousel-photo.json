@@ -1,0 +1,21 @@
+{
+  "collectionName": "components_car_show_carousel_photos",
+  "info": {
+    "displayName": "Carousel photo",
+    "description": "A photo in the 2027 car show strip",
+    "icon": "landscape"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "alt": {
+      "type": "string",
+      "required": false
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_car_show_bullets",
+  "info": {
+    "displayName": "Bullet",
+    "description": "A single line of text used for steps, highlights, and tier benefits",
+    "icon": "bulletList"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

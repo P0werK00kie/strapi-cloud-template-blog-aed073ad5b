@@ -1,0 +1,30 @@
+{
+  "collectionName": "components_car_show_sponsors",
+  "info": {
+    "displayName": "Sponsor",
+    "description": "A sponsor logo nested under a sponsorship tier",
+    "icon": "store"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "link": {
+      "type": "text",
+      "required": false
+    },
+    "logo": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": ["images"]
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0,
+      "required": false
+    }
+  }
+}

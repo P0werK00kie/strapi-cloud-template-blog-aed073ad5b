@@ -1,0 +1,19 @@
+{
+  "collectionName": "components_car_show_vendor_package_items",
+  "info": {
+    "displayName": "Vendor package item",
+    "description": "A labeled amount in the local vendor package",
+    "icon": "priceTag"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "amount": {
+      "type": "string",
+      "required": true
+    }
+  }
+}

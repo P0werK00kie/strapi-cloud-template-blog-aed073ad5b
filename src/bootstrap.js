@@ -246,6 +246,7 @@ async function importSeedData() {
     about: ['find', 'findOne'],
     candidate: ['find', 'findOne'],
     'gallery-event': ['find', 'findOne'],
+    'car-show-2027': ['find', 'findOne'],
   });
 
   // Create all entries
@@ -279,7 +280,11 @@ const CANDIDATE_WEBHOOK_EVENTS = [
   'entry.update',
   'entry.delete',
 ];
-const REVALIDATE_WEBHOOK_MODELS = new Set(['candidate', 'gallery-event']);
+const REVALIDATE_WEBHOOK_MODELS = new Set(['candidate', 'gallery-event', 'car-show-2027']);
+
+function isRevalidateWebhook(url) {
+  return typeof url === 'string' && url.split('?')[0].endsWith('/api/revalidate-articles');
+}
 
 async function ensurePublicAction(roleId, action) {
   const existing = await strapi.query('plugin::users-permissions.permission').findOne({
@@ -492,7 +497,7 @@ function installCandidateWebhookSignature(strapiInstance) {
   const originalRun = runner.run.bind(runner);
 
   runner.run = function runCandidateWebhook(webhook, event, info = {}) {
-    if (webhook.url !== CANDIDATE_WEBHOOK_URL) {
+    if (!isRevalidateWebhook(webhook.url)) {
       return originalRun(webhook, event, info);
     }
 
@@ -583,33 +588,6 @@ async function ensureCandidateWebhook() {
   webhookRunner.add(created);
 }
 
-function blocksParagraph(text) {
-  return [
-    {
-      type: 'paragraph',
-      children: [{ type: 'text', text }],
-    },
-  ];
-}
-
-const EXAMPLE_CANDIDATE_ISSUES = [
-  {
-    title: 'Public Safety',
-    stance: blocksParagraph(
-      'I will support increased funding for local law enforcement and first responders.'
-    ),
-  },
-  {
-    title: 'Tax Relief',
-    stance: blocksParagraph(
-      'Georgia families deserve lower taxes. I will work to reduce the state income tax.'
-    ),
-  },
-  {
-    title: 'Infrastructure',
-  },
-];
-
 function talkingPointsToIssues(talkingPoints = []) {
   return talkingPoints
     .map((item) => (typeof item?.point === 'string' ? item.point.trim() : ''))
@@ -648,66 +626,25 @@ async function migrateTalkingPointsToIssues() {
   }
 }
 
-async function ensureSampleCandidate() {
-  const existing = await strapi.documents('api::candidate.candidate').findFirst({
-    filters: { slug: { $eq: 'jane-doe' } },
-    status: 'published',
-    populate: {
-      issues: true,
+async function removeSampleCandidate() {
+  const sample = await strapi.documents('api::candidate.candidate').findFirst({
+    filters: {
+      slug: { $eq: 'jane-doe' },
+      name: { $eq: 'Jane Doe' },
     },
   });
 
-  if (existing) {
-    const data = {};
-    if (!existing.category) {
-      data.category = 'Local';
-    }
-    if (!existing.issues?.length) {
-      data.issues = EXAMPLE_CANDIDATE_ISSUES;
-    }
-    if (Object.keys(data).length > 0) {
-      await strapi.documents('api::candidate.candidate').update({
-        documentId: existing.documentId,
-        data,
-        status: 'published',
-      });
-    }
+  if (!sample) {
     return;
   }
 
-  const photo = await checkFileExistsBeforeUpload(['jane-doe.png']);
+  const contactUrl = typeof sample.contactUrl === 'string' ? sample.contactUrl : '';
+  if (contactUrl && !contactUrl.includes('example.com')) {
+    return;
+  }
 
-  await strapi.documents('api::candidate.candidate').create({
-    data: {
-      name: 'Jane Doe',
-      slug: 'jane-doe',
-      office: 'Walton County Commission',
-      category: 'Local',
-      photo,
-      bio: [
-        {
-          type: 'paragraph',
-          children: [
-            {
-              type: 'text',
-              text: 'Jane Doe is a candidate for Walton County Commission. She is focused on local infrastructure, public safety, and accountable county government.',
-            },
-          ],
-        },
-      ],
-      issues: EXAMPLE_CANDIDATE_ISSUES,
-      talkingPoints: [
-        { point: 'Invest in roads, drainage, and local infrastructure' },
-        { point: 'Support public safety and first responders' },
-        { point: 'Keep county spending transparent and accountable' },
-      ],
-      hasBioPage: true,
-      contactUrl: 'https://example.com/contact',
-      sortOrder: 1,
-      metaTitle: 'Jane Doe',
-      metaDescription: 'Jane Doe for Walton County Commission.',
-    },
-    status: 'published',
+  await strapi.documents('api::candidate.candidate').delete({
+    documentId: sample.documentId,
   });
 }
 
@@ -793,7 +730,7 @@ async function ensureCandidateFeature() {
     await ensureCandidateAdminLabels();
     await ensureCandidateWebhook();
     await ensureHasBioPageDefaults();
-    await ensureSampleCandidate();
+    await removeSampleCandidate();
     await migrateTalkingPointsToIssues();
   } catch (error) {
     strapi.log.error('Could not finish Candidate collection setup');
@@ -805,4 +742,7 @@ module.exports = async () => {
   await seedExampleApp();
   await ensureCandidateFeature();
   await ensureGalleryEventFeature();
+
+  const { ensureCarShow2027Feature } = require('./car-show-2027-setup');
+  await ensureCarShow2027Feature();
 };

@@ -1,0 +1,39 @@
+{
+  "collectionName": "components_car_show_sponsorship_tiers",
+  "info": {
+    "displayName": "Sponsorship tier",
+    "description": "A priced sponsorship package with benefits and sponsor logos",
+    "icon": "award"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "price": {
+      "type": "string",
+      "required": true
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "required": false
+    },
+    "sortOrder": {
+      "type": "integer",
+      "default": 0,
+      "required": false
+    },
+    "benefits": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.bullet"
+    },
+    "sponsors": {
+      "type": "component",
+      "repeatable": true,
+      "component": "car-show.sponsor"
+    }
+  }
+}
