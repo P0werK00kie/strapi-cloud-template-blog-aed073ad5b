@@ -536,11 +536,30 @@ async function ensureCarShow2027Entry() {
   strapi.log.info('Published the Car Show 2027 single type');
 }
 
+function scheduleCarShow2027Entry() {
+  const run = () => {
+    ensureCarShow2027Entry().catch((error) => {
+      strapi.log.error('Could not finish Car Show 2027 entry setup');
+      strapi.log.error(error);
+    });
+  };
+
+  const httpServer = strapi.get('server')?.httpServer;
+  if (httpServer && !httpServer.listening) {
+    httpServer.once('listening', run);
+    return;
+  }
+
+  setImmediate(run);
+}
+
 async function ensureCarShow2027Feature() {
   try {
     await ensureCarShowPublicPermissions();
     await ensureLocalRevalidateWebhook();
-    await ensureCarShow2027Entry();
+    // Image downloads and the first publish happen after the HTTP server is up
+    // so a Cloud deploy can pass its health check before that work starts.
+    scheduleCarShow2027Entry();
   } catch (error) {
     strapi.log.error('Could not finish Car Show 2027 single type setup');
     strapi.log.error(error);

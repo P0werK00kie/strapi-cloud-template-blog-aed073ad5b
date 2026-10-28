@@ -487,6 +487,19 @@ function placeHasBioPageNearContactUrl(layouts = {}) {
   };
 }
 
+let warnedMissingWebhookSecret = false;
+
+function warnMissingWebhookSecret(strapiInstance) {
+  if (warnedMissingWebhookSecret) {
+    return;
+  }
+
+  warnedMissingWebhookSecret = true;
+  strapiInstance.log.warn(
+    'WEBHOOK_SECRET is not set. Revalidate webhooks are skipped until that variable is set on the Strapi host.'
+  );
+}
+
 function installCandidateWebhookSignature(strapiInstance) {
   const crypto = require('crypto');
   const runner = strapiInstance.get('webhookRunner');
@@ -505,6 +518,12 @@ function installCandidateWebhookSignature(strapiInstance) {
       return Promise.resolve({ statusCode: 204 });
     }
 
+    const secret = process.env.WEBHOOK_SECRET;
+    if (!secret) {
+      warnMissingWebhookSecret(strapiInstance);
+      return Promise.resolve({ statusCode: 204 });
+    }
+
     const body = JSON.stringify({
       event,
       createdAt: new Date(),
@@ -515,19 +534,8 @@ function installCandidateWebhookSignature(strapiInstance) {
       ...webhook.headers,
       'X-Strapi-Event': event,
       'Content-Type': 'application/json',
+      'x-webhook-signature': crypto.createHmac('sha256', secret).update(body).digest('hex'),
     };
-    const secret = process.env.WEBHOOK_SECRET;
-
-    if (secret) {
-      headers['x-webhook-signature'] = crypto
-        .createHmac('sha256', secret)
-        .update(body)
-        .digest('hex');
-    } else {
-      strapiInstance.log.warn(
-        'WEBHOOK_SECRET is not set; candidate webhook will be sent without x-webhook-signature'
-      );
-    }
 
     return this.fetch(webhook.url, {
       method: 'post',
