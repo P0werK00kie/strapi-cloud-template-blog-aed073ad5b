@@ -272,8 +272,20 @@ async function uploadLocalFile(filePath, name, alternativeText) {
   return uploaded;
 }
 
+// Downloading and resizing these images peaks well over 2 GB of memory (the hero
+// alone is ~18 MB), which gets the Strapi Cloud container killed on every boot.
+// Production seeds text only; upload the images in the admin panel instead.
+// Set CAR_SHOW_SEED_IMAGES=true to force image seeding.
+function shouldSeedImages() {
+  const flag = process.env.CAR_SHOW_SEED_IMAGES;
+  if (flag !== undefined) {
+    return flag === 'true';
+  }
+  return process.env.NODE_ENV !== 'production';
+}
+
 async function mediaIdFor(cache, { imageUrl, name, alt }) {
-  if (!imageUrl) return null;
+  if (!imageUrl || !shouldSeedImages()) return null;
   if (cache.has(imageUrl)) return cache.get(imageUrl);
 
   const dir = path.join(process.cwd(), '.tmp', 'car-show-2027-seed');
