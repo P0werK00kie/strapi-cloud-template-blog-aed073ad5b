@@ -753,4 +753,7 @@ module.exports = async () => {
 
   const { ensureCarShow2027Feature } = require('./car-show-2027-setup');
   await ensureCarShow2027Feature();
+
+  const { ensureWaltonModelFeature } = require('./walton-model-setup');
+  await ensureWaltonModelFeature();
 };

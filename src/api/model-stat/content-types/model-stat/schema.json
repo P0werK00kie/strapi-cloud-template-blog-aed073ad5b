@@ -1,0 +1,32 @@
+{
+  "kind": "collectionType",
+  "collectionName": "model_stats",
+  "info": {
+    "singularName": "model-stat",
+    "pluralName": "model-stats",
+    "displayName": "Model Stat",
+    "description": "Scoreboard numbers on /walton-model. Leave value empty to hide a stat."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "value": {
+      "type": "integer"
+    },
+    "displayOrder": {
+      "type": "integer",
+      "default": 0
+    },
+    "visible": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}

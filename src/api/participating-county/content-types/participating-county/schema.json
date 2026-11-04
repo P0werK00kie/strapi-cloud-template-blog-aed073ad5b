@@ -1,0 +1,48 @@
+{
+  "kind": "collectionType",
+  "collectionName": "participating_counties",
+  "info": {
+    "singularName": "participating-county",
+    "pluralName": "participating-counties",
+    "displayName": "Participating County",
+    "description": "Georgia counties running the Walton Model (map on /walton-model)"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true,
+      "maxLength": 80
+    },
+    "fips": {
+      "type": "string",
+      "required": true,
+      "unique": true,
+      "regex": "^13\\d{3}$",
+      "maxLength": 5
+    },
+    "launchDate": {
+      "type": "date"
+    },
+    "clubName": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "clubUrl": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": [
+        "active",
+        "launching"
+      ],
+      "default": "active",
+      "required": true
+    }
+  }
+}
